@@ -1,0 +1,4 @@
+Explanation: Prefer sources labeled Pragmatux over others
+Package: *
+Pin: release l=Pragmatux
+Pin-Priority: 700

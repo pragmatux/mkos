@@ -1,5 +1,5 @@
 Source: mkos
-Section: unknown
+Section: devel
 Priority: extra
 Maintainer: Ryan Kuester <rkuester@insymbols.com>
 Build-Depends: debhelper (>= 8.0.0)
@@ -7,6 +7,9 @@ Standards-Version: 3.9.3
 
 Package: mkos
 Architecture: all
-Depends: ${misc:Depends}
-Description: <insert up to 60 chars description>
- <insert long description, indented with spaces>
+Depends: multistrap, ${misc:Depends}
+Description: Make operating system images
+ mkos builds operating system images for embedded systems using
+ multistrap.
+ .
+ This package is a part of Pragmatux (http://pragmatux.org).

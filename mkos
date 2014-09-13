@@ -1,0 +1,173 @@
+#!/bin/bash
+set -e
+set -u
+
+fatal () {
+	echo "error: $@" >&2
+	exit 1
+}
+
+green () {
+	printf '\033[32m%s\033[m\n' "$@"
+}
+
+fix_owner () {
+	# If called under sudo, set ownership to sudo's caller
+	test "${SUDO_UID-}" && chown ${SUDO_UID-}:${SUDO_GID} "$@"
+}
+
+## Parse arguments
+while [ "$#" != 0 ]; do
+	case "$1,${2-}" in
+		-a,?*|--arch,?*)
+			arch="$2"
+			shift; shift
+			;;
+		-s,?*|--sources,?*)
+			sources="$2"
+			shift; shift
+			;;
+		-S,*|--print-default-sources,*)
+			print_sources=1
+			shift
+			;;
+		-p,?*|--preferences,?*)
+			apt_preferences="$2"
+			shift; shift
+			;;
+		-P,*|--print-default-preferences,*)
+			print_preferences=1
+			shift
+			;;
+		-d,?*|--create-directory,?*)
+			outdir="$2"
+			no_default_output=1
+			shift; shift
+			;;
+		-i,?*|--create-initramfs,?*)
+			initramfs="$2"
+			no_default_output=1
+			shift; shift
+			;;
+		-k,?*|--copy-kernel,?*)
+			kernel="$2"
+			shift; shift
+			;;
+		--configure,*)
+			configure=1
+			shift
+			;;
+		-h,*|--help,*)
+			exec man ${0##*/}
+			;;
+		-*)
+			fatal "bad or invalidly used argument $1"
+			;;
+		*)
+			packages="$1 $packages"
+			shift
+			;;
+	esac
+done
+: ${MKOS_DEFAULTS:=/usr/share/mkos/defaults}
+: ${arch:=$(dpkg-architecture | grep DEB_BUILD_ARCH= | cut -f2 -d=)}
+: ${sources:=$MKOS_DEFAULTS/sources}
+: ${apt_preferences:=$MKOS_DEFAULTS/preferences}
+: ${packages:=device-$arch}
+: ${log:=./mkos.log}
+
+test "${print_sources-}" && { cat $sources; exit; }
+test "${print_preferences-}" && { cat $apt_preferences; exit; }
+
+test "$(whoami)" = "root" || fatal "must run under fakeroot(1) or as root"
+
+tempdir=$(mktemp --directory --tmpdir=. mkos.temp.XXXXXXXX)
+trap "rm -rf $tempdir; exit" INT TERM EXIT
+: ${outdir:=$tempdir/fs}
+
+## Write multistrap config
+mstrap_conf=$tempdir/mstrap.conf
+cat >$mstrap_conf <<- EOF
+	[general]
+	arch=$arch
+	noauth=true
+	unpack=true
+	cleanup=true
+	omitrequired=true
+	markauto=true
+	ignorenativearch=true
+	aptsources=
+EOF
+if [ -n "$apt_preferences" -a "$apt_preferences" != "none" ]; then
+	echo "aptpreferences=$apt_preferences" >>$mstrap_conf
+fi
+echo "bootstrap=$(sed -n 's/[][]//gp' <$sources | xargs)" >> $mstrap_conf
+cat $sources >> $mstrap_conf
+echo "packages=$packages" >>$mstrap_conf
+
+## Multistrap
+green "mkos: composing packages"
+/usr/sbin/multistrap --file $mstrap_conf --dir $outdir 2>&1 |
+	tee $log | egrep '^(Get:|Hit |Fetched)'
+if [ ${PIPESTATUS[0]} != 0 ]; then
+	green "error: multistrap failed (see $log)" >&2
+	tail $log >&2
+	exit 1
+fi
+
+## Optionally configure
+if [ "${configure-}" ]; then
+	native_arch=$(dpkg-architecture | grep DEB_BUILD_ARCH= | cut -f2 -d=)
+	test "$arch" = "$native_arch" ||
+		fatal "can only --configure when --arch is $native_arch"
+	
+	autoconfigure=/usr/bin/dpkg-autoconfigure
+	test -x $autoconfigure ||
+		fatal "OS must have $autoconfigure to --configure"
+
+	green "mkos: configuring packages"
+	
+	policy=$outdir/usr/sbin/policy-rc.d
+	cat >$policy <<- EOF
+		#!/bin/sh
+		echo "installation policy-rc.d denying invoke-rc.d action"
+		exit 101
+	EOF
+	chmod 755 $policy
+
+	mkdir -p $outdir/proc
+	mount --bind /proc $outdir/proc
+	mkdir -p $outdir/dev
+	mount --bind /dev $outdir/dev
+	mkdir -p $outdir/sys
+	mount --bind /sys $outdir/sys
+
+	chroot $outdir $autoconfigure
+
+	umount $outdir/proc
+	umount $outdir/dev
+	umount $outdir/sys
+	rm $polciy
+fi
+
+if [ "${kernel-}" ]; then
+	green "mkos: copying kernel image to $kernel"
+	cp $outdir/boot/vmlinuz* $kernel
+	fix_owner $kernel
+fi
+
+if [ "${initramfs-}" ]; then
+	green "mkos: creating initramfs $initramfs"
+	(cd $outdir && find . | cpio -o -H newc) | gzip >$initramfs
+	fix_owner $initramfs
+fi
+
+if [ "${tarball-}" -o -z "${no_default_output-}" ]; then
+	tgz=${tarball:=./ptux.tgz}
+	green "mkos: creating tarball $tgz"
+	tar czCf $outdir $tgz .
+fi
+
+rm -rf $tempdir
+trap - INT TERM EXIT
+exit

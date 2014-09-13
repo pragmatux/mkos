@@ -1,0 +1,9 @@
+[ptux]
+source=http://packages.pragmatux.org/device
+suite=3.0
+components=main
+
+[debian]
+source=http://cdn.debian.net/debian
+suite=wheezy
+components=main
