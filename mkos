@@ -83,6 +83,8 @@ test "$(whoami)" = "root" || fatal "must run under fakeroot(1) or as root"
 tempdir=$(mktemp --directory --tmpdir=. mkos.temp.XXXXXXXX)
 trap "rm -rf $tempdir; exit" INT TERM EXIT
 : ${outdir:=$tempdir/fs}
+touch $log
+fix_owner $log
 
 ## Write multistrap config
 mstrap_conf=$tempdir/mstrap.conf
@@ -121,8 +123,8 @@ if [ "${configure-}" ]; then
 		fatal "can only --configure when --arch is $native_arch"
 	
 	autoconfigure=/usr/bin/dpkg-autoconfigure
-	test -x $autoconfigure ||
-		fatal "OS must have $autoconfigure to --configure"
+	test -x $outdir/$autoconfigure ||
+		fatal "OS must have ${autoconfigure##*/} to --configure"
 
 	green "mkos: configuring packages"
 	
@@ -146,7 +148,7 @@ if [ "${configure-}" ]; then
 	umount $outdir/proc
 	umount $outdir/dev
 	umount $outdir/sys
-	rm $polciy
+	rm $policy
 fi
 
 if [ "${kernel-}" ]; then
@@ -165,6 +167,7 @@ if [ "${tarball-}" -o -z "${no_default_output-}" ]; then
 	tgz=${tarball:=./ptux.tgz}
 	green "mkos: creating tarball $tgz"
 	tar czCf $outdir $tgz .
+	fix_owner $tgz
 fi
 
 rm -rf $tempdir
