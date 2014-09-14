@@ -69,11 +69,10 @@ while [ "$#" != 0 ]; do
 			;;
 	esac
 done
-: ${MKOS_DEFAULTS:=/usr/share/mkos/defaults}
 : ${arch:=$(dpkg-architecture | grep DEB_BUILD_ARCH= | cut -f2 -d=)}
-: ${sources:=$MKOS_DEFAULTS/sources}
-: ${apt_preferences:=$MKOS_DEFAULTS/preferences}
-: ${packages:=device-$arch}
+: ${sources:=/usr/share/mkos/defaults/sources}
+: ${apt_preferences:=/usr/share/mkos/defaults/preferences}
+: ${packages:=${MKOS_DEFAULT_PACKAGES:-device-$arch}}
 : ${log:=./mkos.log}
 
 test "${print_sources-}" && { cat $sources; exit; }

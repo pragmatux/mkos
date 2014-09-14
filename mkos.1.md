@@ -31,9 +31,10 @@ This program is part of [Pragmatux](http://pragmatux.org).
 *PACKAGE_NAME*...
 :	Names of the packages to include in the output repository.
 	Dependencies of the named packages, computed recursively, are
-	included as well. The default is device-$arch, where $arch is
-	the debian architecture of the build machine given by
-	`dpkg-architecture`(1).
+	included as well. The default is `device-$arch`, where `$arch`
+	is the debian architecture of the build machine given by
+	`dpkg-architecture`(1). The default is overridable from wrapper
+	scripts via the environment variable `MKOS_DEFAULT_PACKAGES`.
 
 --create-directory *DIRNAME*, -d *DIRNAME*:
 :	Create the operating filesystem in the directory *DIRNAME*.
