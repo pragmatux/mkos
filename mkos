@@ -64,7 +64,7 @@ while [ "$#" != 0 ]; do
 			fatal "bad or invalidly used argument $1"
 			;;
 		*)
-			packages="$1 $packages"
+			packages="$1 ${packages-}"
 			shift
 			;;
 	esac
