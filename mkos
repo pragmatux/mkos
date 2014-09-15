@@ -14,6 +14,7 @@ green () {
 fix_owner () {
 	# If called under sudo, set ownership to sudo's caller
 	test "${SUDO_UID-}" && chown ${SUDO_UID-}:${SUDO_GID} "$@"
+	return 0
 }
 
 ## Parse arguments
