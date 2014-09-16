@@ -70,7 +70,7 @@ while [ "$#" != 0 ]; do
 			;;
 	esac
 done
-: ${arch:=$(dpkg-architecture | grep DEB_BUILD_ARCH= | cut -f2 -d=)}
+: ${arch:=$(dpkg --print-architecture)}
 : ${sources:=/usr/share/mkos/defaults/sources}
 : ${apt_preferences:=/usr/share/mkos/defaults/preferences}
 : ${packages:=${MKOS_DEFAULT_PACKAGES:-device-$arch}}
@@ -119,7 +119,7 @@ fi
 
 ## Optionally configure
 if [ "${configure-}" ]; then
-	native_arch=$(dpkg-architecture | grep DEB_BUILD_ARCH= | cut -f2 -d=)
+	native_arch=$(dpkg --print-architecture)
 	test "$arch" = "$native_arch" ||
 		fatal "can only --configure when --arch is $native_arch"
 	
