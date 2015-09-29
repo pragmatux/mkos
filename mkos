@@ -110,7 +110,7 @@ echo "packages=$packages" >>$mstrap_conf
 ## Multistrap
 green "mkos: composing packages"
 /usr/sbin/multistrap --file $mstrap_conf --dir $outdir 2>&1 |
-	tee $log | egrep '^(Get:|Hit |Fetched)'
+	tee $log | egrep --line-buffered '^(Get:|Hit |Fetched)'
 if [ ${PIPESTATUS[0]} != 0 ]; then
 	green "error: multistrap failed (see $log)" >&2
 	tail $log >&2
