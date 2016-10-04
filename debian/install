@@ -1,2 +1,3 @@
 mkos /usr/bin
 defaults /usr/share/mkos
+debug-apt.conf /usr/share/mkos

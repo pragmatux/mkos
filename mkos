@@ -46,6 +46,10 @@ while [ "$#" != 0 ]; do
 			no_default_output=1
 			shift; shift
 			;;
+		--debug,*)
+			debug=1
+			shift
+			;;
 		-i,?*|--create-initramfs,?*)
 			initramfs="$2"
 			no_default_output=1
@@ -81,6 +85,12 @@ test "${print_sources-}" && { cat $sources; exit; }
 test "${print_preferences-}" && { cat $apt_preferences; exit; }
 
 test "$(whoami)" = "root" || fatal "must run under fakeroot(1) or as root"
+
+if [ "${debug-}" ]; then
+	test "${APT_CONFIG-}" && \
+		fatal "error: exported APT_CONFIG would be overwritten"
+	export APT_CONFIG=/usr/share/mkos/debug-apt.conf
+fi
 
 tempdir=$(mktemp --directory --tmpdir=. mkos.temp.XXXXXXXX)
 trap "rm -rf $tempdir; exit" INT TERM EXIT

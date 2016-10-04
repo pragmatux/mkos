@@ -89,6 +89,10 @@ This program is part of [Pragmatux](http://pragmatux.org).
 	hardware-dependent value from the workstation in a device a
 	configuration file. 
 
+--debug:
+:	Write extra information to the log about failures of dependency
+	resolution and server access.
+
 # SOURCES FORMAT
 
 The sources file passed to --sources is an .ini format file giving the
