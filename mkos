@@ -120,6 +120,7 @@ echo "packages=$packages" >>$mstrap_conf
 
 ## Multistrap
 green "mkos: composing packages"
+set +e
 /usr/sbin/multistrap --file $mstrap_conf --dir $outdir 2>&1 |
 	tee $log | egrep --line-buffered '^(Get:|Hit |Fetched)'
 if [ ${PIPESTATUS[0]} != 0 ]; then
@@ -127,6 +128,7 @@ if [ ${PIPESTATUS[0]} != 0 ]; then
 	tail $log >&2
 	exit 1
 fi
+set -e
 
 ## Optionally configure
 if [ "${configure-}" ]; then
