@@ -123,13 +123,13 @@ if [ "${configure-}" ]; then
 	native_arch=$(dpkg --print-architecture)
 	test "$arch" = "$native_arch" ||
 		fatal "can only --configure when --arch is $native_arch"
-	
+
 	autoconfigure=/usr/bin/dpkg-autoconfigure
 	test -x $outdir/$autoconfigure ||
 		fatal "OS must have ${autoconfigure##*/} to --configure"
 
 	green "mkos: configuring packages"
-	
+
 	policy=$outdir/usr/sbin/policy-rc.d
 	cat >$policy <<- EOF
 		#!/bin/sh
