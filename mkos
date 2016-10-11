@@ -130,6 +130,13 @@ if [ ${PIPESTATUS[0]} != 0 ]; then
 fi
 set -e
 
+## Remove paths that should have been excluded by dpkg configuration
+if [ "$(ls $outdir/etc/dpkg/dpkg.cfg.d/* 2>/dev/null || true)" ]; then
+	cat $outdir/etc/dpkg/dpkg.cfg.d/* \
+		| /usr/lib/mkos/excludepaths.py $outdir \
+		| xargs --no-run-if-empty --max-args=100 rm -rf
+fi
+
 ## Optionally configure
 if [ "${configure-}" ]; then
 	native_arch=$(dpkg --print-architecture)

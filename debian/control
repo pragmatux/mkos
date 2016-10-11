@@ -7,7 +7,7 @@ Standards-Version: 3.9.3
 
 Package: mkos
 Architecture: all
-Depends: multistrap, ${misc:Depends}
+Depends: multistrap, python, python-support (>= 0.90), ${misc:Depends}
 Description: Make operating system images
  mkos builds operating system images for embedded systems using
  multistrap.
