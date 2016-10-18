@@ -1,4 +1,4 @@
-Explanation: Prefer sources labeled Pragmatux over others
+Explanation: Prioritize Debian below other sources (the default is 500)
 Package: *
-Pin: release l=Pragmatux
-Pin-Priority: 700
+Pin: release o=Debian
+Pin-Priority: 400
